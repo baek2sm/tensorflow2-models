@@ -11,21 +11,21 @@ class DCGAN():
     def __init__(self):
         self.img_shape = (28, 28, 1)  # Target image shape, values of width and height should be multiples of 4.
         self.latent_dim = (100, )  # Generator input shape
-        self.generator_initial_size = (self.img_shape[0]//4, self.img_shape[1]//4, 64)  # There are 2UpSampling layers.
+        self.generator_initial_size = (self.img_shape[0]//4, self.img_shape[1]//4, 128)  # There are 2UpSampling layers.
 
         # Build discriminator and generator
         self.discriminator = self.build_discriminator()
         self.generator = self.build_generator()
 
         # Compile discriminator
-        self.discriminator.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+        self.discriminator.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5), metrics=['accuracy'])
         self.discriminator.trainable = False
 
         # Compile combined model
         combined_model_input = Input(shape=self.latent_dim)
         combined_model_output = self.discriminator(self.generator(combined_model_input))
         self.combined_model = Model(combined_model_input, combined_model_output)
-        self.combined_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+        self.combined_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5), metrics=['accuracy'])
 
     def build_generator(self):
         g_input = Input(shape=self.latent_dim)
@@ -68,6 +68,7 @@ class DCGAN():
         x = BatchNormalization(momentum=0.99)(x)
         x = LeakyReLU(alpha=0.2)(x)
         x = Dropout(rate=0.25)(x)
+
         x = Flatten()(x)
         d_output = Dense(units=1, activation='sigmoid')(x)
 
@@ -128,4 +129,4 @@ if __name__ == '__main__':
 
     # Train DCGAN
     dcgan = DCGAN()
-    dcgan.fit(X_train, batch_size=64, epochs=2000)
+    dcgan.fit(X_train, batch_size=32, epochs=10000, save_interval=50)
